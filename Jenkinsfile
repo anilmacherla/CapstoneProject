@@ -28,9 +28,18 @@ pipeline {
                             }
                         }
                     }
+		stage('Set current kubectl context') {
+			steps {
+				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
+					sh '''
+						kubectl config use-context arn:aws:eks:us-west-2:638941221632:cluster/EKS-Infra
+					'''
+				}
+			}
+		}
 		stage('Deploy blue container') {
 			steps {
-				withAWS(region:'us-west-2', credentials:'demo-ecr_credentials') {
+				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
 					sh '''
 						kubectl apply -f ./blue-controller.json
 					'''
@@ -38,20 +47,25 @@ pipeline {
 			}
 		}
 
-        	stage('Deploy blue & Green container') {
-            		steps {
-                          sshagent(['Project']) {
-                             sh "scp -o StrictHostKeyChecking=no  blue-controller.yaml green-controller.yaml blue-service.yaml ubuntu@ec2-34-217-66-56.us-west-2.compute.amazonaws.com:/home/ec2-user/"
-                             script{
-                                try{
-	                            sh "ssh ubuntu@ec2-34-217-66-56.us-west-2.compute.amazonaws.com sudo kubectl apply -f ."
-	                     }catch(error){
-	                            sh "ssh ubuntu@ec2-34-217-66-56.us-west-2.compute.amazonaws.com sudo kubectl create -f ."
-                                          }
-                            }
-                         }
-            	   }
-        	}
+		stage('Deploy green container') {
+			steps {
+				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
+					sh '''
+						kubectl apply -f ./green-controller.json
+					'''
+				}
+			}
+		}
+
+		stage('Create the service in the cluster, redirect to blue') {
+			steps {
+				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
+					sh '''
+						kubectl apply -f ./blue-service.json
+					'''
+				}
+			}
+		}
 
 		stage('Wait user approve') {
             steps {
@@ -59,20 +73,13 @@ pipeline {
             }
         }
 
-                stage('Create the service in the cluster, redirect to green') {
-                        steps {
-                          sshagent(['Project']) {
-                             sh "scp -o StrictHostKeyChecking=no  green-service.yaml ubuntu@ec2-34-217-66-56.us-west-2.compute.amazonaws.com:/home/ec2-user/run/"
-                             script{
-                                try{
-	                            sh "ssh ubuntu@ec2-34-217-66-56.us-west-2.compute.amazonaws.com sudo kubectl apply -f ."
-	                     }catch(error){
-	                            sh "ssh ubuntu@ec2-34-217-66-56.us-west-2.compute.amazonaws.com sudo kubectl create -f ."
-                                          }
-                            }
-                         }
-                        }
-                }
-
-	}
+		stage('Create the service in the cluster, redirect to green') {
+			steps {
+				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
+					sh '''
+						kubectl apply -f ./green-service.json
+					'''
+				}
+			}
+		}
 }
