@@ -28,15 +28,7 @@ pipeline {
                             }
                         }
                     }
-		stage('Set current kubectl context') {
-			steps {
-				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
-					sh '''
-						kubectl config use-context arn:aws:eks:us-west-2:638941221632:cluster/EKS-Infra
-					'''
-				}
-			}
-		}
+		
 		stage('Deploy blue container') {
 			steps {
 				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
