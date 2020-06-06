@@ -30,7 +30,7 @@ pipeline {
                     }
 		stage('Deploy blue container') {
 			steps {
-				withAWS(region:'us-west-2', credentials:'ecr_credentials') {
+				withAWS(region:'us-west-2', credentials:'demo-ecr_credentials') {
 					sh '''
 						kubectl apply -f ./blue-controller.json
 					'''
