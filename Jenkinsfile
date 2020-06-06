@@ -2,8 +2,8 @@ pipeline {
 	agent any
 
    	environment {
-        DOCKER_IMAGE_NAME = "anilmacherla/capstone",
-		dockerHubCredentials = 'dockerhub'
+        DOCKER_IMAGE_NAME = "anilmacherla/capstone"
+		
 	}
 
 	stages {
@@ -21,7 +21,7 @@ pipeline {
                                 dockerImage = docker.build("steeloctopus/duckhunt:latest")
                                 echo "Push Docker Image"
                                 retry(2){
-                                docker.withRegistry('',dockerHubCredentials ) {
+                                docker.withRegistry('',"dockerhub" ) {
                                     dockerImage.push()
                                     }
                                 }
