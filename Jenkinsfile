@@ -3,7 +3,6 @@ pipeline {
 
    	environment {
         DOCKER_IMAGE_NAME = "anilmacherla/capstone"
-		
 	}
 
 	stages {
@@ -14,58 +13,44 @@ pipeline {
 			}
 		}
 		
-		stage('Build & Push to Dockerfile') {
-                 steps {
-                    script {
-                                echo "Build Docker Image"
-                                dockerImage = docker.build("anilmacherla/capstone:latest")
-                                echo "Push Docker Image"
-                                retry(2){
-                                docker.withRegistry('',"dockerhub" ) {
-                                    dockerImage.push()
-                                    }
-                                }
+		stage('Build Docker Image') {
+            		steps {
+                		script {
+                    			app = docker.build(DOCKER_IMAGE_NAME)
+                    			app.inside {
+                        			sh 'echo Hello, Nginx!'
+                    			}
+                		}
+            		}
+
+		}
+
+       		 stage('Push Docker Image') {
+            		steps {
+                		script {
+                    			docker.withRegistry('https://registry.hub.docker.com', 'docker_hub_login') {
+                        		app.push("${env.BUILD_NUMBER}")
+                        		app.push("latest")
+                    			}
+                		}
+            		}
+        	}
+
+
+        	stage('Deploy blue & Green container') {
+            		steps {
+                          sshagent(['Project']) {
+                             sh "scp -o StrictHostKeyChecking=no  blue-controller.yaml green-controller.yaml blue-service.yaml ubuntu@34.217.66.56:/home/ubuntu/"
+                             script{
+                                try{
+	                            sh "ssh ubuntu@34.217.66.56 sudo kubectl apply -f ."
+	                     }catch(error){
+	                            sh "ssh ubuntu@34.217.66.56 sudo kubectl create -f ."
+                                          }
                             }
-                        }
-                    }
-		stage('Set current kubectl context') {
-			steps {
-				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
-					sh '''
-						kubectl config use-context arn:aws:eks:us-west-2:638941221632:cluster/EKS-Infra
-					'''
-				}
-			}
-		}
-		stage('Deploy blue container') {
-			steps {
-				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
-					sh '''
-						kubectl apply -f ./blue-controller.json
-					'''
-				}
-			}
-		}
-
-		stage('Deploy green container') {
-			steps {
-				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
-					sh '''
-						kubectl apply -f ./green-controller.json
-					'''
-				}
-			}
-		}
-
-		stage('Create the service in the cluster, redirect to blue') {
-			steps {
-				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
-					sh '''
-						kubectl apply -f ./blue-service.json
-					'''
-				}
-			}
-		}
+                         }
+            	   }
+        	}
 
 		stage('Wait user approve') {
             steps {
@@ -73,14 +58,20 @@ pipeline {
             }
         }
 
-		stage('Create the service in the cluster, redirect to green') {
-			steps {
-				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
-					sh '''
-						kubectl apply -f ./green-service.json
-					'''
-				}
-			}
-		}
-}
+                stage('Create the service in the cluster, redirect to green') {
+                        steps {
+                          sshagent(['Project']) {
+                             sh "scp -o StrictHostKeyChecking=no  green-service.yaml ubuntu@ec2-34-217-66-56.us-west-2.compute.amazonaws.com:/home/ec2-user/run/"
+                             script{
+                                try{
+	                            sh "ssh ubuntu@ec2-34-217-66-56.us-west-2.compute.amazonaws.com sudo kubectl apply -f ."
+	                     }catch(error){
+	                            sh "ssh ubuntu@ec2-34-217-66-56.us-west-2.compute.amazonaws.com sudo kubectl create -f ."
+                                          }
+                            }
+                         }
+                        }
+                }
+
+	}
 }
