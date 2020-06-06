@@ -13,28 +13,20 @@ pipeline {
 			}
 		}
 		
-		stage('Build Docker Image') {
-            		steps {
-                		script {
-                    			app = docker.build(DOCKER_IMAGE_NAME)
-                    			app.inside {
-                        			sh 'echo Hello, Nginx!'
-                    			}
-                		}
-            		}
-
-		}
-
-       		 stage('Push Docker Image') {
-            		steps {
-                		script {
-                    			docker.withRegistry('https://registry.hub.docker.com', 'docker_hub_login') {
-                        		app.push("${env.BUILD_NUMBER}")
-                        		app.push("latest")
-                    			}
-                		}
-            		}
-        	}
+		stage('Build & Push to Dockerfile') {
+                 steps {
+                    script {
+                                echo "Build Docker Image"
+                                dockerImage = docker.build("steeloctopus/duckhunt:latest")
+                                echo "Push Docker Image"
+                                retry(2){
+                                docker.withRegistry('',dockerHubCredentials ) {
+                                    dockerImage.push()
+                                    }
+                                }
+                            }
+                        }
+                    }
 
 
         	stage('Deploy blue & Green container') {
