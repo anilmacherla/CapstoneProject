@@ -28,7 +28,15 @@ pipeline {
                             }
                         }
                     }
-
+		stage('Deploy blue container') {
+			steps {
+				withAWS(region:'us-west-2', credentials:'ecr_credentials') {
+					sh '''
+						kubectl apply -f ./blue-controller.json
+					'''
+				}
+			}
+		}
 
         	stage('Deploy blue & Green container') {
             		steps {
