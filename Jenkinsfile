@@ -2,7 +2,8 @@ pipeline {
 	agent any
 
    	environment {
-        DOCKER_IMAGE_NAME = "anilmacherla/capstone"
+        DOCKER_IMAGE_NAME = "anilmacherla/capstone",
+		dockerHubCredentials = 'dockerhub'
 	}
 
 	stages {
