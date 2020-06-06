@@ -18,7 +18,7 @@ pipeline {
                  steps {
                     script {
                                 echo "Build Docker Image"
-                                dockerImage = docker.build("steeloctopus/duckhunt:latest")
+                                dockerImage = docker.build("anilmacherla/capstone:latest")
                                 echo "Push Docker Image"
                                 retry(2){
                                 docker.withRegistry('',"dockerhub" ) {
