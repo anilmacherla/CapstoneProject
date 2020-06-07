@@ -32,7 +32,7 @@ pipeline {
 			        steps {
 				        withAWS(region:'us-east-1', credentials:'demo-ecr-credentials') {
 					    sh '''
-						aws eks --region us-west-2 update-kubeconfig --name Eks-Cluster
+						aws eks --region us-west-2 update-kubeconfig --name EKS-Infra
 					    '''
 				    }
 			    }
