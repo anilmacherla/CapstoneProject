@@ -28,23 +28,7 @@ pipeline {
                         }
                     }
 
-		stage('Deploy blue & Green container') {
-            		steps {
-						
-				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
-                          sshagent(['Project']) {
-                             sh "scp -o StrictHostKeyChecking=no  blue-deployment.yaml   ubuntu@35.162.14.41:/home/ubuntu/"
-                             script{
-                                try{
-	                            sh "ssh ubuntu@35.162.14.41 sudo kubectl apply -f ."
-	                     }catch(error){
-	                            sh "ssh ubuntu@35.162.14.41 sudo kubectl create -f ."
-                                          }
-                            }
-                         }
-				}
-            	   }
-        	}
+		
         stage('Deploy blue container') {
 			steps {
 					withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
