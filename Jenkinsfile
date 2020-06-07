@@ -7,7 +7,7 @@ pipeline {
 
 	stages {
 
-		stage('Lint HTML') {
+		stage('HTML Linting') {
 			steps {
 				sh 'tidy -q -e *.html'
 			}
@@ -28,7 +28,7 @@ pipeline {
                         }
                     }
 
-       		stage('Create conf file cluster') {
+       		stage('Create config file cluster') {
 			        steps {
 				        withAWS(region:'us-east-1', credentials:'demo-ecr-credentials') {
 					    sh '''
