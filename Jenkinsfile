@@ -28,13 +28,41 @@ pipeline {
                         }
                     }
 
-
-        stage('Deploy blue container') {
+        stage('Create conf file cluster') {
+			        steps {
+				        withAWS(region:'us-east-1', credentials:'demo-ecr-credentials') {
+					    sh '''
+						aws eks --region us-west-2 update-kubeconfig --name Eks-Cluster
+					    '''
+				    }
+			    }
+		}
+		
+		stage('Deploy blue container') {
 			steps {
-					withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
-					sh "pwd"	
+				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
 					sh '''
-						kubectl apply -f blue-deployment.yaml
+						kubectl apply -f ./blue-controller.yaml
+					'''
+				}
+			}
+		}
+
+		stage('Deploy green container') {
+			steps {
+				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
+					sh '''
+						kubectl apply -f ./green-controller.yaml
+					'''
+				}
+			}
+		}
+
+		stage('Create the service in the cluster, redirect to blue') {
+			steps {
+				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
+					sh '''
+						kubectl apply -f ./blue-service.yaml
 					'''
 				}
 			}
@@ -42,19 +70,22 @@ pipeline {
 
 		stage('Wait user approve') {
             steps {
-                	input "Ready to redirect traffic to green?"
+                input "Ready to redirect traffic to green?"
             }
         }
 
-        stage('Deploy green container') {
+		stage('Create the service in the cluster, redirect to green') {
 			steps {
 				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
 					sh '''
-						kubectl apply -f ./green-deployment.yaml
+						kubectl apply -f ./green-service.yaml
 					'''
 				}
 			}
 		}
+
+	
+        
 
 	}
 }
