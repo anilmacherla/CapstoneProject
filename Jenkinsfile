@@ -31,14 +31,19 @@ pipeline {
 		
         stage('Deploy blue container') {
 			steps {
+				try{
 					withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
 					sh "pwd"	
 					sh '''
 						kubectl apply -f blue-deployment.yaml
 					'''
-				}
-			}
-		}
+					}
+				}catch(e) {
+            				notify("Something failed Kubernetes Setup")
+            				throw e;
+				    } 
+			} 
+	}
 
 		stage('Wait user approve') {
             steps {
