@@ -31,7 +31,7 @@ pipeline {
 
         stage('Deploy blue container') {
 			steps {
-					withAWS(region:'us-west-2', credentials:'jenkins') {
+					withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
 					sh '''
 						kubectl apply -f ./blue-deployment.yaml
 					'''
