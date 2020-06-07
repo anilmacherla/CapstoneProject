@@ -1,0 +1,38 @@
+---
+kind: ReplicationController
+apiVersion: v1
+metadata:
+  name: blue
+  labels:
+    app: blue
+spec:
+  replicas: 1
+  selector:
+    app: blue
+  template:
+    metadata:
+      labels:
+        app: blue
+    spec:
+      containers:
+      - name: blue
+        image: anilmacherla/capstone
+        ports:
+        - name: http-server
+          containerPort: 80
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: bluegreenlb
+  labels:
+    app: bluegreenlb
+spec:
+  ports:
+  - port: 8000
+    targetPort: 80
+  selector:
+    app: blue
+  type: LoadBalancer
+
