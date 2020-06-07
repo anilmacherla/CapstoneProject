@@ -53,7 +53,7 @@ pipeline {
             }
         }
 
-        stage('Deploy blue container') {
+        stage('Deploy green container') {
 			steps {
 				withAWS(region:'us-west-2', credentials:'demo-ecr-credentials') {
 					sh '''
