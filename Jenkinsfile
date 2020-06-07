@@ -28,15 +28,7 @@ pipeline {
                         }
                     }
 
-        stage('Create conf file cluster') {
-			        steps {
-				        withAWS(region:'us-east-1', credentials:'demo-ecr-credentials') {
-					    sh '''
-						aws eks --region us-west-2 update-kubeconfig --name Eks-Cluster
-					    '''
-				    }
-			    }
-		}
+        
 
         		
 		stage('Deploy blue container') {
